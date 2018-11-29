@@ -1,0 +1,281 @@
+---
+title: "RalphML_1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+library(lattice)
+```
+
+```{r}
+library(caret)
+```
+
+
+```{r}
+library(ellipse)
+```
+
+
+
+```{r}
+library(kernlab)
+```
+
+
+```{r}
+library(lubridate)
+```
+
+```{r}
+library(kableExtra)
+```
+
+
+```{r}
+#install.packages("caret", dependencies = c("Depends", "Suggests"))
+```
+
+```{r}
+#dataset<- read_csv("Ralph_ML_Date.csv")
+#dataset<- read_csv("Ralph_Weather.csv")
+#dataset<-iris
+dataset<-read_csv("RalphWeather_2.csv")
+```
+
+```{r}
+#View(iris)
+View(dataset)
+```
+
+
+```{r}
+head(dataset)
+```
+
+```{r}
+dataset$Date<-mdy(dataset$Date)
+```
+
+
+
+```{r}
+head(dataset)
+```
+
+# 2.7 CREATE VALIDATION DATASET
+
+## LOAD VALIDATION DATASET
+```{r}
+#validation_index<-createDataPartition(dataset$Sales , p=0.8, list = FALSE)
+validation_index<-createDataPartition(dataset$Hundreds , p=0.8, list = FALSE)
+validation<-dataset[-validation_index , ]
+dataset<- dataset[validation_index , ]
+```
+
+
+```{r}
+#percentage<- prop.table(table(dataset$Sales))*100
+#cbind(freq=table(dataset$Sales) , percentage=percentage)
+```
+
+## Run algorithms using 10 fold cross validation
+
+# 5.1
+```{r}
+control<- trainControl(method = "cv" , number = 10)
+metric<- "Accuracy"
+```
+
+## 5.2 Build Models
+
+#Linear Regression
+```{r}
+set.seed(7)
+#fit.lda<- train(Sales~., data = dataset, method="lda" , metric=metric , trControl=control)
+#fit.lda<- train(Species~., data = dataset, method="lda" , metric=metric , trControl=control)
+fit.lda<- train(Hundreds~., data = dataset, method="lda" , metric=metric , trControl=control)
+```
+
+#non linear
+```{r}
+set.seed(7)
+#fit.cart<- train(Sales~., data = dataset , method="rpart" , metric=metric, trControl=control)
+#fit.cart<- train(Species~., data = dataset , method="rpart" , metric=metric, trControl=control)
+fit.cart<- train(Hundreds~., data = dataset , method="rpart" , metric=metric, trControl=control)
+```
+
+```{r}
+set.seed(7)
+#fit.knn<- train(Sales~., data = dataset,method="knn", metric=metric,trControl=control)
+#fit.knn<- train(Species~., data = dataset,method="knn", metric=metric,trControl=control)
+fit.knn<- train(Hundreds~., data = dataset,method="knn", metric=metric,trControl=control)
+```
+
+#Advanced Algorithms
+```{r}
+set.seed(7)
+#fit.svm<- train(Sales~., data = dataset, method="svmRadial", metric=metric, trControl=control)
+#fit.svm<- train(Species~., data = dataset, method="svmRadial", metric=metric, trControl=control)
+fit.svm<- train(Hundreds~., data = dataset, method="svmRadial", metric=metric, trControl=control)
+```
+
+```{r}
+set.seed(7)
+#fit.rf<- train(Sales~., data = dataset, method="rf", metric=metric, trControl=control)
+#fit.rf<- train(Species~., data = dataset, method="rf", metric=metric, trControl=control)
+fit.rf<- train(Hundreds~., data = dataset, method="rf", metric=metric, trControl=control)
+```
+
+
+## Summarize
+
+```{r}
+results<- resamples(list(lda=fit.lda,cart=fit.cart,knn=fit.knn, svm=fit.svm,rf=fit.rf ))
+summary(results)
+```
+
+```{r}
+dotplot(results)
+```
+
+
+#Summarize Best Model
+```{r}
+#print(fit.lda)
+print(fit.cart)
+```
+
+
+# Next we could try  to impriove our scores by adding the day fo the week (as a number from 1 to 7)and the month (as a number 1 to 12)
+
+
+# Revison
+## Instead of the Target being "One"" , "Two"," "Three", etc we ## will place the Hundreds into bins of "Poor", "Good", and ##"Great".
+.
+## WE will also add in the Day of the week (1 :7) since Friday ##night is likely to be busier  thatn Monday for going out with ##friends.
+
+## We will also add the month because Ice cream is more desired ## in hot august than chilly March.
+
+```{r}
+Ralph_Expanded<- read_csv("Ralph_ML_Date.csv")
+```
+
+
+```{r}
+head(Ralph_Expanded)
+```
+
+```{r}
+Ralph_Select<- select(Ralph_Expanded,DayNumber, Month,Weather,Tempature,Group )
+```
+
+```{r}
+head(Ralph_Select)
+```
+
+
+
+validation_index<-createDataPartition(dataset$Hundreds , p=0.8, list = FALSE)
+validation<-dataset[-validation_index , ]
+dataset<- dataset[validation_index , ]
+```{r}
+validation_index_2<-createDataPartition(Ralph_Select$Group , p=0.8, list = FALSE)
+validation_2<-Ralph_Select[-validation_index_2 , ]
+dataset_2<- Ralph_Select[validation_index_2 , ]
+
+```
+
+
+control<- trainControl(method = "cv" , number = 10)
+metric<- "Accuracy"
+```{r}
+control<- trainControl(method = "cv" , number = 10)
+metric<- "Accuracy"
+```
+
+
+## 5.2 Build Models
+
+#Linear Regression
+
+```{r}
+set.seed(7)
+
+fit.lda<- train(Group~., data = dataset_2, method="lda" , metric=metric , trControl=control)
+```
+
+
+## Non Linear
+```{r}
+set.seed(7)
+
+fit.cart<- train(Group~., data = dataset_2 , method="rpart" , metric=metric, trControl=control)
+```
+
+
+```{r}
+set.seed(7)
+
+fit.knn<- train(Group~., data = dataset_2,method="knn", metric=metric,trControl=control)
+```
+
+
+##Advanced Algorithm
+```{r}
+set.seed(7)
+
+fit.svm<- train(Group~., data = dataset_2, method="svmRadial", metric=metric, trControl=control)
+```
+
+
+```{r}
+set.seed(7)
+
+fit.rf<- train(Group~., data = dataset_2, method="rf", metric=metric, trControl=control)
+```
+
+
+## Summarize
+```{r}
+results<- resamples(list(lda=fit.lda,cart=fit.cart,knn=fit.knn, svm=fit.svm,rf=fit.rf ))
+summary(results)
+```
+
+
+```{r}
+dotplot(results)
+```
+
+
+#Summarize Best Model
+```{r}
+#print(fit.lda)
+print(fit.rf)
+```
+
+```{r}
+Table<-read_csv("Comparison.csv")
+```
+
+```{r}
+kable(Table)%>%
+  kable_styling(bootstrap_options = c("Striped", "hover"))
+```
+
+
+
